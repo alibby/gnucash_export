@@ -1,0 +1,47 @@
+
+This project is a one off to extract data from a Gnu Cash data file, storing it
+an an sqlite3 database.  Once the data is in the sqlite database, the contents are then 
+exported into a format we found suitable for importing into compiere.  We're not currently
+finished with our migration yet, so there will likely be changes.
+
+This work is published under the MIT license:
+
+The MIT License
+
+Copyright (c) 2009 Tangeis, LLC DBA xforty technologies
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+This folder contains two files:
+
+gnucash_dumper.rb: Dumps gnucash data files into an SQLite database.
+    Command line parameters: 
+        --help help output
+        --file=[filename] the gnucash data file to read.  It's expected to be gzip compressed with no suffix.
+        --db=[filename] the sqlite db file name.  If it exists it'll be removed and re-created.  
+
+gnucash_export.rb: Extracts information from the sqlite database to csv files
+    Command line paramdters:
+        --help help output
+        --db=[filename] the sqlite db file name.
+        --outdir=[dirname] the directory where csv files will be dumped.
+
+Rakefile: provides clean task to clean up working area
+
+README: This file.
