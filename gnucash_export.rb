@@ -47,7 +47,7 @@ begin
 
   @db = 'exports.db'
   @outdir = 'exports'
-  @default_tasklist = %w/invoices customers accounts transactions products vendors/
+  @default_tasklist = %w/invoices customers accounts transactions products vendors payment_status/
   @tasklist = []
 
   opts.each do |opt, arg|
@@ -212,6 +212,25 @@ def export_products
   open("#{@outdir}/products.csv", 'w') do |fh|
     fh.puts CSV.generate_line(%w/ProductDescription ProductPrice/)
     res.each { |result| fh.puts CSV.generate_line(result) }
+  end
+end
+
+def export_payment_status
+  log_msg("Invoice Payment Status")
+  
+  req = @db.execute %Q{
+    SELECT i.id as "Invoice", SUM(split.split_value) as "Due"
+    FROM gncinvoices i
+    JOIN transaction_splits split ON split.split_lot_guid = i.postlot
+    JOIN transactions tr ON tr.transactionGuid = split.transactionGuid
+    JOIN transaction_slots sl ON sl.transactionGuid = tr.transactionGuid
+    GROUP BY i.id
+    ORDER BY i.id;    
+  }
+  
+  open("#{@outdir}/payment_status.csv", "w") do |fh|
+    fh.puts CSV.generate_line(%w/Invoice Due/)
+    req.each { |res| fh.puts CSV.generate_line(res) }
   end
 end
 
