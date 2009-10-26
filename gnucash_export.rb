@@ -28,6 +28,7 @@ Usage #{File.basename(__FILE__)} [options]
   --transactions          export transactions
   --products              export of distinct invoice line item descriptions and prices
   --vendors               export of employees and vendors
+  --invoice_summary       export of payment status on invoices
 }
   exit 1
 end
@@ -42,12 +43,13 @@ begin
     [ '--accounts', GetoptLong::NO_ARGUMENT ], 
     [ '--transactions', GetoptLong::NO_ARGUMENT ],
     [ '--products', GetoptLong::NO_ARGUMENT ],
-    [ '--vendors', GetoptLong::NO_ARGUMENT ]
+    [ '--vendors', GetoptLong::NO_ARGUMENT ],
+    [ '--invoice_summary', GetoptLong::NO_ARGUMENT ]
   )
 
   @db = 'exports.db'
   @outdir = 'exports'
-  @default_tasklist = %w/invoices customers accounts transactions products vendors payment_status/
+  @default_tasklist = %w/invoices customers accounts transactions products vendors invoice_summary/
   @tasklist = []
 
   opts.each do |opt, arg|
@@ -215,21 +217,27 @@ def export_products
   end
 end
 
-def export_payment_status
+def export_invoice_summary
   log_msg("Invoice Payment Status")
   
   req = @db.execute %Q{
-    SELECT i.id as "Invoice", SUM(split.split_value) as "Due"
+    SELECT i.id as "Invoice", 
+           customers.name as "Customer",
+           i.postedDate as "Invoiced",
+           post_tr.split_value*-1 as "Amount",
+           SUM(split.split_value)/2 as "Unpaid"
     FROM gncinvoices i
     JOIN transaction_splits split ON split.split_lot_guid = i.postlot
     JOIN transactions tr ON tr.transactionGuid = split.transactionGuid
     JOIN transaction_slots sl ON sl.transactionGuid = tr.transactionGuid
+    JOIN transaction_splits post_tr ON i.posttxn = post_tr.transactionGuid
+    JOIN customers ON i.ownerGuid = customers.guid
     GROUP BY i.id
-    ORDER BY i.id;    
+    ORDER BY i.id;
   }
   
-  open("#{@outdir}/payment_status.csv", "w") do |fh|
-    fh.puts CSV.generate_line(%w/Invoice Due/)
+  open("#{@outdir}/invoice_summary.csv", "w") do |fh|
+    fh.puts CSV.generate_line(%w/Invoice Customer Invoiced Amount Due/)
     req.each { |res| fh.puts CSV.generate_line(res) }
   end
 end
